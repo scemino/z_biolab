@@ -26,7 +26,7 @@ fn draw() void {
     var buf: [64]u8 = undefined;
     g.font.draw(vec2(@as(f32, @floatFromInt(zi.render.renderSize().x)) / 2.0, 20), "Level Complete!", .FONT_ALIGN_CENTER);
     g.font.draw(vec2(98, 56), "Time:", .FONT_ALIGN_RIGHT);
-    var text = std.fmt.bufPrint(&buf, "{}s", .{g.level_time}) catch @panic("failed to format string");
+    var text = std.fmt.bufPrint(&buf, "{d:.2}s", .{g.level_time}) catch @panic("failed to format string");
     g.font.draw(vec2(104, 56), text, .FONT_ALIGN_LEFT);
     g.font.draw(vec2(98, 68), "Tubes Collected:", .FONT_ALIGN_RIGHT);
     text = std.fmt.bufPrint(&buf, "{}/{}", .{ g.tubes_collected, g.tubes_total }) catch @panic("failed to format string");
