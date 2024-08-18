@@ -1,0 +1,109 @@
+const std = @import("std");
+const zi = @import("zimpact");
+const game = @import("../game.zig");
+const g = @import("../global.zig");
+const Scene = zi.Scene;
+const Image = zi.Image;
+const font = zi.font;
+const Engine = zi.Engine(game.Entity, game.EntityKind);
+const engine = zi.engine;
+const scale = zi.utils.scale;
+const vec2 = zi.vec2;
+const Vec2 = zi.Vec2;
+const camera_t = zi.camera_t;
+
+var level_path_buffer: [64]u8 = undefined;
+var level_path: []u8 = undefined;
+var initial_spawn_pos: Vec2 = vec2(0, 0);
+var camera: camera_t = .{};
+var last_checkpoint: zi.EntityRef = undefined;
+
+pub fn setLevelPath(path: []const u8) void {
+    var fba = std.heap.FixedBufferAllocator.init(&level_path_buffer);
+    level_path = fba.allocator().dupe(u8, path) catch @panic("failed ro setLevelPath");
+}
+
+pub fn setCheckpoint(checkpoint: zi.EntityRef) void {
+    last_checkpoint = checkpoint;
+}
+
+pub fn respawn() void {
+    var pos = initial_spawn_pos;
+
+    if (Engine.entityByRef(last_checkpoint)) |respawn_pod| {
+        pos = respawn_pod.base.pos.add(vec2(11, 0));
+        Engine.entityMessage(respawn_pod, game.EntityMessage.EM_ACTIVATE, null);
+    }
+
+    g.player = Engine.entityRef(Engine.spawn(.player, pos).?);
+    camera.follow(Engine, g.player, false);
+    g.death_count += 1;
+}
+
+pub fn spawnParticle(pos: Vec2, vel: f32, vel_variance: f32, angle: f32, angle_variance: f32, sheet: *zi.AnimDef) ?*game.Entity {
+    if (Engine.spawn(.particle, pos)) |particle| {
+        particle.base.anim = zi.anim(sheet);
+        particle.base.anim.gotoRand();
+        particle.base.anim.flip_x = zi.utils.randInt(0, 1) > 0;
+        particle.base.anim.flip_y = zi.utils.randInt(0, 1) > 0;
+
+        const a = zi.utils.randFloat(angle - angle_variance, angle + angle_variance);
+        const v = zi.utils.randFloat(vel - vel_variance, vel + vel_variance);
+        particle.base.vel = zi.types.fromAngle(a).mulf(v);
+        return particle;
+    }
+    return null;
+}
+
+fn init() void {
+    Engine.loadLevel(level_path);
+    Engine.gravity = 240;
+
+    for (engine.background_maps) |map| {
+        if (map) |m| {
+            m.setAnim(80, 0.13, &[_]u16{ 80, 81, 82, 83, 84, 85, 86, 87 });
+            m.setAnim(81, 0.17, &[_]u16{ 84, 83, 82, 81, 80, 87, 86, 85 });
+            m.setAnim(88, 0.23, &[_]u16{ 88, 89, 90, 91, 92, 93, 94, 95 });
+            m.setAnim(89, 0.19, &[_]u16{ 95, 94, 93, 92, 91, 90, 89, 88 });
+        }
+    }
+
+    camera.offset = vec2(32, 0);
+    camera.speed = 3;
+    camera.min_vel = 5;
+
+    last_checkpoint = zi.entity.entityRefNone();
+
+    const players = Engine.entitiesByType(.player);
+    if (players.items.len > 0) {
+        g.player = players.items[0];
+        camera.follow(Engine, g.player, true);
+        const player_ent = Engine.entityByRef(g.player);
+        initial_spawn_pos = player_ent.?.base.pos;
+    }
+
+    g.tubes_collected = 0;
+    g.death_count = 0;
+    g.tubes_total = Engine.entitiesByType(.test_tube).items.len;
+}
+
+fn update() void {
+    Engine.sceneBaseUpdate();
+
+    camera.update(Engine);
+}
+
+fn draw() void {
+    Engine.baseDraw();
+}
+
+fn cleanup() void {
+    g.level_time = @as(f32, @floatCast(engine.time));
+}
+
+pub var scene: Scene = .{
+    .init = init,
+    .update = update,
+    .draw = draw,
+    .cleanup = cleanup,
+};
