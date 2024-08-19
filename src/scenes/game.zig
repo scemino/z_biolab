@@ -12,15 +12,13 @@ const vec2 = zi.vec2;
 const Vec2 = zi.Vec2;
 const camera_t = zi.camera_t;
 
-var level_path_buffer: [64]u8 = undefined;
-var level_path: []u8 = undefined;
+var level_path: []const u8 = undefined;
 var initial_spawn_pos: Vec2 = vec2(0, 0);
 var camera: camera_t = .{};
 var last_checkpoint: zi.EntityRef = undefined;
 
 pub fn setLevelPath(path: []const u8) void {
-    var fba = std.heap.FixedBufferAllocator.init(&level_path_buffer);
-    level_path = fba.allocator().dupe(u8, path) catch @panic("failed ro setLevelPath");
+    level_path = path;
 }
 
 pub fn setCheckpoint(checkpoint: zi.EntityRef) void {
@@ -95,6 +93,11 @@ fn update() void {
 
 fn draw() void {
     Engine.baseDraw();
+
+    // var buf: [128]u8 = undefined;
+    // const text = std.fmt.bufPrint(&buf, "total: {d:.2}ms, update: {d:.2}ms, draw: {d:.2}ms\ndraw calls: {}, entities: {}, checks: {}", .{ engine.perf.total * 1000, engine.perf.update * 1000, engine.perf.draw * 1000, engine.perf.draw_calls, engine.perf.entities, engine.perf.checks }) catch @panic("failed to format string");
+    // // Draw some debug info...
+    // g.font.draw(vec2(2, 2), text, .FONT_ALIGN_LEFT);
 }
 
 fn cleanup() void {
