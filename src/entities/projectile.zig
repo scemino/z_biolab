@@ -11,7 +11,7 @@ const vec2 = zi.vec2;
 const Vec2 = zi.Vec2;
 const animDef = zi.animDef;
 const Engine = zi.Engine;
-const engine = Engine(game.Entity, game.EntityKind);
+const engine = Engine(game.Entity);
 
 fn load() void {}
 
@@ -53,7 +53,7 @@ fn touch(self: *Entity, other: *Entity) void {
     setHit(self);
 }
 
-pub var vtab: EntityVtab(Entity) = .{
+pub const vtab: EntityVtab(Entity) = .{
     .init = init,
     .update = update,
     .collide = collide,

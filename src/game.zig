@@ -25,6 +25,7 @@ pub const grunt = @import("entities/grunt.zig");
 pub const spike = @import("entities/spike.zig");
 pub const spewer = @import("entities/spewer.zig");
 pub const spewer_shot = @import("entities/spewer_shot.zig");
+pub const engine = zi.Engine(Entity);
 
 pub const EntityMessage = enum {
     EM_INVALID,

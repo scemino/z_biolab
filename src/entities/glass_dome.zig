@@ -6,7 +6,7 @@ const sgame = @import("../scenes/game.zig");
 const Entity = game.Entity;
 const vec2 = zi.vec2;
 const vec2i = zi.vec2i;
-const engine = zi.Engine(game.Entity, game.EntityKind);
+const engine = zi.Engine(game.Entity);
 
 var anim_idle: zi.AnimDef = undefined;
 var anim_shards: zi.AnimDef = undefined;
@@ -52,7 +52,7 @@ fn kill(self: *Entity) void {
     }
 }
 
-pub var vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab(Entity) = .{
     .load = load,
     .init = init,
     .damage = damage,

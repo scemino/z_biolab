@@ -3,7 +3,7 @@ const zi = @import("zimpact");
 const game = @import("../game.zig");
 const Entity = game.Entity;
 const vec2 = zi.vec2;
-const engine = zi.Engine(game.Entity, game.EntityKind);
+const engine = zi.Engine(game.Entity);
 
 fn draw(self: *Entity, _: zi.Vec2) void {
     self.base.draw_order = 64;
@@ -13,6 +13,6 @@ fn draw(self: *Entity, _: zi.Vec2) void {
     zi.render.draw(vec2(0, 0), size, zi.render.NO_TEXTURE, vec2(0, 0), vec2(0, 0), color);
 }
 
-pub var vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab(Entity) = .{
     .draw = draw,
 };

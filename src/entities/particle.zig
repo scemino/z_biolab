@@ -4,7 +4,7 @@ const game = @import("../game.zig");
 const Entity = game.Entity;
 const EntityVtab = zi.EntityVtab;
 const vec2 = zi.vec2;
-const engine = zi.Engine(game.Entity, game.EntityKind);
+const engine = zi.Engine(game.Entity);
 
 fn init(self: *Entity) void {
     self.base.size = vec2(4, 4);
@@ -31,7 +31,7 @@ fn update(self: *Entity) void {
     engine.baseUpdate(self);
 }
 
-pub var vtab: EntityVtab(Entity) = .{
+pub const vtab: EntityVtab(Entity) = .{
     .init = init,
     .update = update,
 };

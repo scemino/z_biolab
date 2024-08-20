@@ -3,7 +3,7 @@ const zi = @import("zimpact");
 const game = @import("../game.zig");
 const Entity = game.Entity;
 const vec2 = zi.vec2;
-const engine = zi.Engine(game.Entity, game.EntityKind);
+const engine = zi.Engine(game.Entity);
 
 fn settings(self: *Entity, s: std.json.ObjectMap) void {
     self.entity.delay.targets = engine.entitiesFromJsonNames(s.get("target").?.object);
@@ -30,7 +30,7 @@ fn trigger(self: *Entity, other: *Entity) void {
     self.entity.delay.triggered_by = engine.entityRef(other);
 }
 
-pub var vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab(Entity) = .{
     .settings = settings,
     .update = update,
     .trigger = trigger,

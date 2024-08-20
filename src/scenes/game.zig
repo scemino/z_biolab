@@ -5,8 +5,6 @@ const g = @import("../global.zig");
 const Scene = zi.Scene;
 const Image = zi.Image;
 const font = zi.font;
-const Engine = zi.Engine(game.Entity, game.EntityKind);
-const engine = zi.engine;
 const scale = zi.utils.scale;
 const vec2 = zi.vec2;
 const Vec2 = zi.Vec2;
@@ -28,18 +26,18 @@ pub fn setCheckpoint(checkpoint: zi.EntityRef) void {
 pub fn respawn() void {
     var pos = initial_spawn_pos;
 
-    if (Engine.entityByRef(last_checkpoint)) |respawn_pod| {
+    if (game.engine.entityByRef(last_checkpoint)) |respawn_pod| {
         pos = respawn_pod.base.pos.add(vec2(11, 0));
-        Engine.entityMessage(respawn_pod, game.EntityMessage.EM_ACTIVATE, null);
+        game.engine.entityMessage(respawn_pod, game.EntityMessage.EM_ACTIVATE, null);
     }
 
-    g.player = Engine.entityRef(Engine.spawn(.player, pos).?);
-    camera.follow(Engine, g.player, false);
+    g.player = game.engine.entityRef(game.engine.spawn(.player, pos).?);
+    camera.follow(game.engine, g.player, false);
     g.death_count += 1;
 }
 
 pub fn spawnParticle(pos: Vec2, vel: f32, vel_variance: f32, angle: f32, angle_variance: f32, sheet: *zi.AnimDef) ?*game.Entity {
-    if (Engine.spawn(.particle, pos)) |particle| {
+    if (game.engine.spawn(.particle, pos)) |particle| {
         particle.base.anim = zi.anim(sheet);
         particle.base.anim.gotoRand();
         particle.base.anim.flip_x = zi.utils.randInt(0, 1) > 0;
@@ -54,10 +52,10 @@ pub fn spawnParticle(pos: Vec2, vel: f32, vel_variance: f32, angle: f32, angle_v
 }
 
 fn init() void {
-    Engine.loadLevel(level_path);
-    Engine.gravity = 240;
+    game.engine.loadLevel(game.EntityKind, level_path);
+    game.engine.gravity = 240;
 
-    for (engine.background_maps) |map| {
+    for (zi.engine.background_maps) |map| {
         if (map) |m| {
             m.setAnim(80, 0.13, &[_]u16{ 80, 81, 82, 83, 84, 85, 86, 87 });
             m.setAnim(81, 0.17, &[_]u16{ 84, 83, 82, 81, 80, 87, 86, 85 });
@@ -72,27 +70,27 @@ fn init() void {
 
     last_checkpoint = zi.entity.entityRefNone();
 
-    const players = Engine.entitiesByType(.player);
+    const players = game.engine.entitiesByType(.player);
     if (players.items.len > 0) {
         g.player = players.items[0];
-        camera.follow(Engine, g.player, true);
-        const player_ent = Engine.entityByRef(g.player);
+        camera.follow(game.engine, g.player, true);
+        const player_ent = game.engine.entityByRef(g.player);
         initial_spawn_pos = player_ent.?.base.pos;
     }
 
     g.tubes_collected = 0;
     g.death_count = 0;
-    g.tubes_total = Engine.entitiesByType(.test_tube).items.len;
+    g.tubes_total = game.engine.entitiesByType(.test_tube).items.len;
 }
 
 fn update() void {
-    Engine.sceneBaseUpdate();
+    game.engine.sceneBaseUpdate();
 
-    camera.update(Engine);
+    camera.update(game.engine);
 }
 
 fn draw() void {
-    Engine.baseDraw();
+    game.engine.baseDraw();
 
     // var buf: [128]u8 = undefined;
     // const text = std.fmt.bufPrint(&buf, "total: {d:.2}ms, update: {d:.2}ms, draw: {d:.2}ms\ndraw calls: {}, entities: {}, checks: {}", .{ engine.perf.total * 1000, engine.perf.update * 1000, engine.perf.draw * 1000, engine.perf.draw_calls, engine.perf.entities, engine.perf.checks }) catch @panic("failed to format string");
@@ -101,10 +99,10 @@ fn draw() void {
 }
 
 fn cleanup() void {
-    g.level_time = @as(f32, @floatCast(engine.time));
+    g.level_time = @as(f32, @floatCast(zi.engine.time));
 }
 
-pub var scene: Scene = .{
+pub const scene: Scene = .{
     .init = init,
     .update = update,
     .draw = draw,

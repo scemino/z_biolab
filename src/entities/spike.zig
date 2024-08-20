@@ -13,7 +13,7 @@ const vec2 = zi.vec2;
 const Vec2 = zi.Vec2;
 const animDef = zi.animDef;
 const Engine = zi.Engine;
-const engine = Engine(game.Entity, game.EntityKind);
+const engine = Engine(game.Entity);
 
 var anim_crawl: AnimDef = undefined;
 var anim_shoot: AnimDef = undefined;
@@ -140,7 +140,7 @@ fn touch(self: *Entity, other: *Entity) void {
     engine.entityDamage(other, self, 10);
 }
 
-pub var vtab: EntityVtab(Entity) = .{
+pub const vtab: EntityVtab(Entity) = .{
     .load = load,
     .init = init,
     .update = update,

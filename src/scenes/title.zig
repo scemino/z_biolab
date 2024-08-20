@@ -7,7 +7,7 @@ const player = @import("../entities/player.zig");
 const Scene = zi.Scene;
 const Image = zi.Image;
 const font = zi.font;
-const Engine = zi.Engine(game.Entity, game.EntityKind);
+const Engine = zi.Engine(game.Entity);
 const engine = zi.engine;
 const scale = zi.utils.scale;
 const vec2 = zi.vec2;
@@ -58,7 +58,7 @@ fn draw() void {
     }
 }
 
-pub var scene: Scene = .{
+pub const scene: Scene = .{
     .init = init,
     .update = update,
     .draw = draw,

@@ -12,7 +12,7 @@ const vec2 = zi.vec2;
 const Vec2 = zi.Vec2;
 const animDef = zi.animDef;
 const Engine = zi.Engine;
-const engine = Engine(game.Entity, game.EntityKind);
+const engine = Engine(game.Entity);
 
 pub const LEFT: u8 = 1;
 pub const RIGHT: u8 = 2;
@@ -209,7 +209,7 @@ fn kill(_: *Entity) void {
     sgame.respawn();
 }
 
-pub var vtab: EntityVtab(Entity) = .{
+pub const vtab: EntityVtab(Entity) = .{
     .load = load,
     .init = init,
     .update = update,

@@ -6,7 +6,7 @@ const sgame = @import("../scenes/game.zig");
 const Entity = game.Entity;
 const vec2 = zi.vec2;
 const vec2i = zi.vec2i;
-const engine = zi.Engine(game.Entity, game.EntityKind);
+const engine = zi.Engine(game.Entity);
 
 var anim_idle: zi.AnimDef = undefined;
 var sound_collect: *zi.sound.SoundSource = undefined;
@@ -30,7 +30,7 @@ fn touch(self: *Entity, _: *Entity) void {
     g.tubes_collected += 1;
 }
 
-pub var vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab(Entity) = .{
     .load = load,
     .init = init,
     .touch = touch,

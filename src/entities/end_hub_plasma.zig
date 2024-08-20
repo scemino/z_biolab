@@ -4,7 +4,7 @@ const game = @import("../game.zig");
 const g = @import("../global.zig");
 const Entity = game.Entity;
 const vec2 = zi.vec2;
-const engine = zi.Engine(game.Entity, game.EntityKind);
+const engine = zi.Engine(game.Entity);
 
 var img_plasma: *zi.Image = undefined;
 
@@ -33,7 +33,7 @@ fn draw(self: *Entity, vp: zi.Vec2) void {
     // TODO: zi.render.setBlendMode(RENDER_BLEND_NORMAL);
 }
 
-pub var vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab(Entity) = .{
     .load = load,
     .draw = draw,
 };
