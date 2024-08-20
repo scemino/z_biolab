@@ -28,9 +28,9 @@ fn draw(self: *Entity, vp: zi.Vec2) void {
     const spread = std.math.clamp(80.0 / (d * d * 0.7), 0, 1000);
     const pos = vec2(self.base.pos.x + (xn1 + xn2 + xn3) * 40 * spread, self.base.pos.y + (yn1 + yn2 + yn3) * 30 * spread);
 
-    // TODO: zi.render.setBlendMode(RENDER_BLEND_LIGHTER);
+    zi.render.setBlendMode(.lighter);
     img_plasma.draw(pos.sub(vp));
-    // TODO: zi.render.setBlendMode(RENDER_BLEND_NORMAL);
+    zi.render.setBlendMode(.normal);
 }
 
 pub const vtab: zi.EntityVtab(Entity) = .{
