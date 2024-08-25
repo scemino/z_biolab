@@ -2,10 +2,9 @@ const std = @import("std");
 const zi = @import("zimpact");
 const game = @import("../game.zig");
 const sgame = @import("../scenes/game.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const vec2 = zi.vec2;
 const vec2i = zi.vec2i;
-const engine = zi.Engine(game.Entity);
 
 var anim_idle: zi.AnimDef = undefined;
 var anim_debris: zi.AnimDef = undefined;
@@ -21,27 +20,27 @@ fn load() void {
 }
 
 fn init(self: *Entity) void {
-    self.base.anim = zi.anim(&anim_idle);
-    self.base.size = vec2(8, 8);
-    self.base.friction = vec2(4, 0);
-    self.base.health = 5;
-    self.base.restitution = 0.4;
-    self.base.mass = 0.25;
+    self.anim = zi.anim(&anim_idle);
+    self.size = vec2(8, 8);
+    self.friction = vec2(4, 0);
+    self.health = 5;
+    self.restitution = 0.4;
+    self.mass = 0.25;
 
-    self.base.group = zi.entity.ENTITY_GROUP_BREAKABLE;
-    self.base.check_against = zi.entity.ENTITY_GROUP_NONE;
-    self.base.physics = zi.entity.ENTITY_PHYSICS_ACTIVE;
+    self.group = zi.entity.ENTITY_GROUP_BREAKABLE;
+    self.check_against = zi.entity.ENTITY_GROUP_NONE;
+    self.physics = zi.entity.ENTITY_PHYSICS_ACTIVE;
 }
 
 fn kill(self: *Entity) void {
     zi.sound.play(sound_crack);
 
     for (0..10) |_| {
-        _ = sgame.spawnParticle(self.base.pos, 120, 30, 0, std.math.pi, &anim_debris);
+        _ = sgame.spawnParticle(self.pos, 120, 30, 0, std.math.pi, &anim_debris);
     }
 }
 
-pub const vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .load = load,
     .init = init,
     .kill = kill,

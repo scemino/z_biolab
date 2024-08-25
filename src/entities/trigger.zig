@@ -1,39 +1,39 @@
 const std = @import("std");
 const zi = @import("zimpact");
 const game = @import("../game.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const vec2 = zi.vec2;
-const engine = zi.Engine(game.Entity);
+const engine = zi.Engine;
 
 fn settings(self: *Entity, s: std.json.ObjectMap) void {
-    self.entity.trigger.targets = engine.entitiesFromJsonNames(s.get("target").?.object);
-    self.base.size.x = @as(f32, @floatFromInt(s.get("size").?.object.get("x").?.integer));
-    self.base.size.y = @as(f32, @floatFromInt(s.get("size").?.object.get("y").?.integer));
+    self.entity.trigger.targets = zi.entity.entitiesFromJsonNames(s.get("target").?.object);
+    self.size.x = @as(f32, @floatFromInt(s.get("size").?.object.get("x").?.integer));
+    self.size.y = @as(f32, @floatFromInt(s.get("size").?.object.get("y").?.integer));
     self.entity.trigger.delay = if (s.get("delay")) |delay| @as(f32, @floatFromInt(delay.integer)) else -1.0;
     self.entity.trigger.can_fire = true;
 
     if (s.get("checks")) |c| {
         const checks = c.string;
         if (std.mem.indexOf(u8, checks, "player") != null) {
-            self.base.check_against |= zi.entity.ENTITY_GROUP_PLAYER;
+            self.check_against |= zi.entity.ENTITY_GROUP_PLAYER;
         }
         if (std.mem.indexOf(u8, checks, "npc") != null) {
-            self.base.check_against |= zi.entity.ENTITY_GROUP_NPC;
+            self.check_against |= zi.entity.ENTITY_GROUP_NPC;
         }
         if (std.mem.indexOf(u8, checks, "enemy") != null) {
-            self.base.check_against |= zi.entity.ENTITY_GROUP_ENEMY;
+            self.check_against |= zi.entity.ENTITY_GROUP_ENEMY;
         }
         if (std.mem.indexOf(u8, checks, "item") != null) {
-            self.base.check_against |= zi.entity.ENTITY_GROUP_ITEM;
+            self.check_against |= zi.entity.ENTITY_GROUP_ITEM;
         }
         if (std.mem.indexOf(u8, checks, "projectile") != null) {
-            self.base.check_against |= zi.entity.ENTITY_GROUP_PROJECTILE;
+            self.check_against |= zi.entity.ENTITY_GROUP_PROJECTILE;
         }
         if (std.mem.indexOf(u8, checks, "breakable") != null) {
-            self.base.check_against |= zi.entity.ENTITY_GROUP_BREAKABLE;
+            self.check_against |= zi.entity.ENTITY_GROUP_BREAKABLE;
         }
     } else {
-        self.base.check_against = zi.entity.ENTITY_GROUP_PLAYER;
+        self.check_against = zi.entity.ENTITY_GROUP_PLAYER;
     }
 }
 
@@ -46,9 +46,9 @@ fn touch(self: *Entity, other: *Entity) void {
         return;
     }
 
-    for (self.entity.trigger.targets.items) |e| {
-        if (engine.entityByRef(e)) |target| {
-            engine.entityTrigger(target, other);
+    for (self.entity.trigger.targets.entities) |e| {
+        if (zi.entity.entityByRef(e)) |target| {
+            zi.entity.entityTrigger(target, other);
         }
     }
 
@@ -59,7 +59,7 @@ fn touch(self: *Entity, other: *Entity) void {
     }
 }
 
-pub const vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .settings = settings,
     .update = update,
     .touch = touch,

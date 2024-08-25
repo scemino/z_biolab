@@ -7,7 +7,6 @@ const player = @import("../entities/player.zig");
 const Scene = zi.Scene;
 const Image = zi.Image;
 const font = zi.font;
-const Engine = zi.Engine(game.Entity);
 const engine = zi.engine;
 const scale = zi.utils.scale;
 const vec2 = zi.vec2;
@@ -28,7 +27,7 @@ fn init() void {
 }
 
 fn update() void {
-    Engine.sceneBaseUpdate();
+    zi.Engine.sceneBaseUpdate();
 
     if (engine.time > 0.5 and !intro_sound_played) {
         zi.sound.play(sound_intro);
@@ -41,12 +40,12 @@ fn update() void {
         zi.sound.unpause(g.music);
 
         scene_game.setLevelPath("assets/levels/biolab-1.json");
-        Engine.setScene(&scene_game.scene);
+        zi.Engine.setScene(&scene_game.scene);
     }
 }
 
 fn draw() void {
-    Engine.baseDraw();
+    zi.Engine.sceneBaseDraw();
 
     const d: f32 = @as(f32, @floatCast(engine.time)) - 1.0;
     img_biolab.draw(vec2(scale(std.math.clamp(d * d * -d, 0, 1), 1.0, 0, -160, 44), 26));

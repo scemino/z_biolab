@@ -2,10 +2,10 @@ const std = @import("std");
 const zi = @import("zimpact");
 const game = @import("../game.zig");
 const sgame = @import("../scenes/game.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const vec2 = zi.vec2;
 const vec2i = zi.vec2i;
-const engine = zi.Engine(game.Entity);
+const engine = zi.Engine;
 
 var anim_idle: zi.AnimDef = undefined;
 var anim_activated: zi.AnimDef = undefined;
@@ -23,17 +23,17 @@ fn load() void {
 }
 
 fn init(self: *Entity) void {
-    self.base.check_against = zi.entity.ENTITY_GROUP_PLAYER;
-    self.base.anim = zi.anim(&anim_idle);
-    self.base.size = vec2(18, 16);
-    self.base.draw_order = -1;
+    self.check_against = zi.entity.ENTITY_GROUP_PLAYER;
+    self.anim = zi.anim(&anim_idle);
+    self.size = vec2(18, 16);
+    self.draw_order = -1;
 }
 
 fn update(self: *Entity) void {
-    if (self.base.anim.def == &anim_respawn and self.base.anim.looped() > 4) {
-        self.base.anim = zi.anim(&anim_activated);
+    if (self.anim.def == &anim_respawn and self.anim.looped() > 4) {
+        self.anim = zi.anim(&anim_activated);
     }
-    engine.baseUpdate(self);
+    zi.entity.entityBaseUpdate(self);
 }
 
 fn touch(self: *Entity, _: *Entity) void {
@@ -41,19 +41,19 @@ fn touch(self: *Entity, _: *Entity) void {
         return;
     }
     self.entity.respawn_pod.activated = true;
-    self.base.anim = zi.anim(&anim_activated);
-    sgame.setCheckpoint(engine.entityRef(self));
+    self.anim = zi.anim(&anim_activated);
+    sgame.setCheckpoint(zi.entity.entityRef(self));
     zi.sound.play(sound_activated);
 }
 
 fn message(self: *Entity, m: ?*anyopaque, _: ?*anyopaque) void {
     const msg: game.EntityMessage = @enumFromInt(@intFromPtr(m));
     if (msg == .EM_ACTIVATE) {
-        self.base.anim = zi.anim(&anim_respawn);
+        self.anim = zi.anim(&anim_respawn);
     }
 }
 
-pub const vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .load = load,
     .init = init,
     .update = update,

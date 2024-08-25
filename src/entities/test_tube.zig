@@ -3,10 +3,10 @@ const zi = @import("zimpact");
 const game = @import("../game.zig");
 const g = @import("../global.zig");
 const sgame = @import("../scenes/game.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const vec2 = zi.vec2;
 const vec2i = zi.vec2i;
-const engine = zi.Engine(game.Entity);
+const engine = zi.Engine;
 
 var anim_idle: zi.AnimDef = undefined;
 var sound_collect: *zi.sound.SoundSource = undefined;
@@ -18,19 +18,19 @@ fn load() void {
 }
 
 fn init(self: *Entity) void {
-    self.base.anim = zi.anim(&anim_idle);
-    self.base.anim.gotoRand();
-    self.base.size = vec2(8, 10);
-    self.base.check_against = zi.entity.ENTITY_GROUP_PLAYER;
+    self.anim = zi.anim(&anim_idle);
+    self.anim.gotoRand();
+    self.size = vec2(8, 10);
+    self.check_against = zi.entity.ENTITY_GROUP_PLAYER;
 }
 
 fn touch(self: *Entity, _: *Entity) void {
-    engine.entityKill(self);
+    zi.entity.entityKill(self);
     zi.sound.play(sound_collect);
     g.tubes_collected += 1;
 }
 
-pub const vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .load = load,
     .init = init,
     .touch = touch,

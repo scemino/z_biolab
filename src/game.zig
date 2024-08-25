@@ -25,14 +25,13 @@ pub const grunt = @import("entities/grunt.zig");
 pub const spike = @import("entities/spike.zig");
 pub const spewer = @import("entities/spewer.zig");
 pub const spewer_shot = @import("entities/spewer_shot.zig");
-pub const engine = zi.Engine(Entity);
 
 pub const EntityMessage = enum {
     EM_INVALID,
     EM_ACTIVATE,
 };
 
-pub const EntityKind = enum {
+pub const EntityKind = enum(u5) {
     blob,
     crate,
     debris,
@@ -60,20 +59,21 @@ pub const EntityKind = enum {
     void,
 };
 
-pub const UEntity = struct {
+pub const UEntity = union(EntityKind) {
     blob: struct {
         in_jump: bool,
         seen_player: bool,
         jump_timer: f32,
     },
+    crate: void,
     debris: struct {
-        count: usize,
+        count: i32,
         duration: f32,
         duration_time: f32,
         emit_time: f32,
     },
     delay: struct {
-        targets: std.ArrayList(zi.EntityRef),
+        targets: zi.EntityList,
         triggered_by: zi.EntityRef,
         fire: bool,
         delay: f32,
@@ -92,13 +92,14 @@ pub const UEntity = struct {
     end_hub: struct {
         stage: i32,
     },
-    end_hub_plasma: struct {
-        time: f32,
-        index: usize,
-    },
     end_hub_fade: struct {
-        time: f32,
+        time: f32 = 0,
     },
+    end_hub_plasma: struct {
+        time: f32 = 0,
+        index: i32 = 0,
+    },
+    glass_dome: void,
     grunt: struct {
         shoot_time: f32,
         flip: bool,
@@ -110,26 +111,27 @@ pub const UEntity = struct {
     level_change: struct {
         path: []const u8,
     },
+    mine: void,
     mover: struct {
-        targets: std.ArrayList(zi.EntityRef),
-        current_target: usize,
+        targets: zi.EntityList,
+        current_target: i32,
         speed: f32,
     },
     particle: struct {
-        life_time: f32,
-        fade_time: f32,
+        life_time: f32 = 0,
+        fade_time: f32 = 0,
     },
     player: struct {
-        high_jump_time: f32,
-        idle_time: f32,
-        flip: bool,
-        can_jump: bool,
-        is_idle: bool,
+        high_jump_time: f32 = 0,
+        idle_time: f32 = 0,
+        flip: bool = false,
+        can_jump: bool = false,
+        is_idle: bool = false,
     },
     projectile: struct {
-        anim_hit: *zi.AnimDef,
-        has_hit: bool,
-        flip: bool,
+        anim_hit: *zi.AnimDef = undefined,
+        has_hit: bool = false,
+        flip: bool = false,
     },
     respawn_pod: struct {
         activated: bool,
@@ -140,7 +142,7 @@ pub const UEntity = struct {
         can_shoot: bool,
     },
     spewer_shot: struct {
-        bounce_count: usize,
+        bounce_count: i32 = 0,
     },
     spike: struct {
         shoot_wait_time: f32,
@@ -148,16 +150,12 @@ pub const UEntity = struct {
         can_shoot: bool,
         flip: bool,
     },
+    test_tube: void,
     trigger: struct {
-        targets: std.ArrayList(zi.EntityRef),
+        targets: zi.EntityList,
         delay: f32,
         delay_time: f32,
         can_fire: bool,
     },
-};
-
-pub const Entity = struct {
-    base: zi.EntityBase,
-    kind: EntityKind,
-    entity: UEntity,
+    void: void,
 };

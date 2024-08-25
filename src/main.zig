@@ -7,6 +7,23 @@ const game = @import("game.zig");
 const player = @import("entities/player.zig");
 const title = @import("scenes/title.zig");
 
+/// -----------------------------------------------------------------------------
+/// Z Impact configuration
+///
+/// These defines are ALL optional. They overwrite the defaults set by
+/// z_impact and configure aspects of the library
+///
+/// The values here (particularly resource limits) have been dialed in to this
+/// particular game. Increase them as needed. Allocating a few GB and thousands
+/// of entities is totally fine.
+pub const zi_options = .{
+    .ALLOC_SIZE = (32 * 1024 * 1024),
+    .ALLOC_TEMP_OBJECTS_MAX = 8,
+    .ENTITIES_MAX = 1024,
+    .ENTITY_TYPE = game.UEntity,
+    .RENDER_RESIZE_MODE = zi.options.RENDER_RESIZE_WIDTH,
+};
+
 fn init() void {
     g.font = zi.font("assets/font_04b03.qoi", "assets/font_04b03.json");
 
@@ -30,13 +47,12 @@ fn init() void {
     // g.music = zi.sound.sound(zi.sound.source("assets/music/biochemie.qoa")).?;
     // zi.sound.setLoop(g.music, true);
 
-    zi.sound.setGlobalVolume(0.75);
-
-    game.engine.setScene(&title.scene);
+    // zi.sound.setGlobalVolume(0.75);
+    zi.Engine.setScene(&title.scene);
 }
 
 pub fn main() void {
-    const vtabs = [_]zi.EntityVtab(game.Entity){
+    const vtabs = [_]zi.EntityVtab{
         game.blob.vtab,
         game.crate.vtab,
         game.debris.vtab,
@@ -64,7 +80,7 @@ pub fn main() void {
         game.ent_void.vtab,
     };
 
-    game.engine.run(.{
+    zi.Engine.run(.{
         .vtabs = &vtabs,
         .window_title = "Z Biolab Disaster",
         .render_size = zi.vec2i(240, 160),

@@ -2,10 +2,10 @@ const std = @import("std");
 const zi = @import("zimpact");
 const game = @import("../game.zig");
 const sgame = @import("../scenes/game.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const vec2 = zi.vec2;
 const vec2i = zi.vec2i;
-const engine = zi.Engine(game.Entity);
+const engine = zi.Engine;
 
 var anim_idle: zi.AnimDef = undefined;
 var anim_gib: zi.AnimDef = undefined;
@@ -19,28 +19,28 @@ fn load() void {
 }
 
 fn init(self: *Entity) void {
-    self.base.size = vec2(8, 5);
-    self.base.offset = vec2(4, 3);
-    self.base.check_against = zi.entity.ENTITY_GROUP_PLAYER;
-    self.base.anim = zi.anim(&anim_idle);
-    self.base.anim.gotoRand();
+    self.size = vec2(8, 5);
+    self.offset = vec2(4, 3);
+    self.check_against = zi.entity.ENTITY_GROUP_PLAYER;
+    self.anim = zi.anim(&anim_idle);
+    self.anim.gotoRand();
 }
 
 fn kill(self: *Entity) void {
     for (0..10) |_| {
-        if (sgame.spawnParticle(self.base.pos, 120, 30, @as(f32, -std.math.pi / 2.0), @as(f32, std.math.pi / 2.0), &anim_gib)) |particle| {
-            particle.base.physics = zi.entity.ENTITY_PHYSICS_WORLD;
+        if (sgame.spawnParticle(self.pos, 120, 30, @as(f32, -std.math.pi / 2.0), @as(f32, std.math.pi / 2.0), &anim_gib)) |particle| {
+            particle.physics = zi.entity.ENTITY_PHYSICS_WORLD;
         }
     }
     zi.sound.play(sound_explode);
 }
 
 fn touch(self: *Entity, other: *Entity) void {
-    engine.entityKill(self);
-    engine.entityDamage(other, self, 10);
+    zi.entity.entityKill(self);
+    zi.entity.entityDamage(other, self, 10);
 }
 
-pub const vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .init = init,
     .load = load,
     .kill = kill,

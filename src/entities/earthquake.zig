@@ -1,9 +1,8 @@
 const std = @import("std");
 const zi = @import("zimpact");
 const game = @import("../game.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const vec2 = zi.vec2;
-const engine = zi.Engine(game.Entity);
 
 var sound_earthquake: *zi.sound.SoundSource = undefined;
 
@@ -36,7 +35,7 @@ fn trigger(self: *Entity, _: *Entity) void {
     self.entity.earthquake.time = self.entity.earthquake.duration;
 }
 
-pub const vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .load = load,
     .settings = settings,
     .update = update,

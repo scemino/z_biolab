@@ -8,7 +8,6 @@ const player = @import("../entities/player.zig");
 const Scene = zi.Scene;
 const Image = zi.Image;
 const font = zi.font;
-const Engine = zi.Engine(game.Entity);
 const engine = zi.engine;
 const scale = zi.utils.scale;
 const vec2 = zi.vec2;
@@ -40,15 +39,15 @@ const credits =
 ;
 
 fn update() void {
-    Engine.sceneBaseUpdate();
+    zi.Engine.sceneBaseUpdate();
 
     if (zi.input.pressed(player.SHOOT) or zi.input.pressed(player.JUMP) or engine.time > 44) {
-        Engine.setScene(&title.scene);
+        zi.Engine.setScene(&title.scene);
     }
 }
 
 fn draw() void {
-    Engine.baseDraw();
+    zi.Engine.sceneBaseDraw();
 
     const color = zi.rgba(255, 255, 255, @intCast(@max(255 - @as(isize, @intFromFloat(@floor(255 * engine.time))), 0)));
     const size = zi.fromVec2i(zi.render.renderSize());

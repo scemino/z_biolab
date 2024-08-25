@@ -2,7 +2,7 @@ const std = @import("std");
 const zi = @import("zimpact");
 const game = @import("../game.zig");
 const sgame = @import("../scenes/game.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const EntityVtab = zi.EntityVtab;
 const Image = zi.Image;
 const Anim = zi.Anim;
@@ -12,7 +12,7 @@ const vec2 = zi.vec2;
 const Vec2 = zi.Vec2;
 const animDef = zi.animDef;
 const Engine = zi.Engine;
-const engine = Engine(game.Entity);
+const engine = zi.Engine;
 
 pub const LEFT: u8 = 1;
 pub const RIGHT: u8 = 2;
@@ -69,56 +69,56 @@ fn load() void {
 }
 
 fn init(self: *Entity) void {
-    self.base.anim = zi.anim(&anim_spawn);
-    self.base.physics = zi.entity.ENTITY_PHYSICS_ACTIVE;
-    self.base.offset = vec2(4, 2);
-    self.base.size = vec2(8, 14);
-    self.base.group = zi.entity.ENTITY_GROUP_PLAYER;
+    self.anim = zi.anim(&anim_spawn);
+    self.physics = zi.entity.ENTITY_PHYSICS_ACTIVE;
+    self.offset = vec2(4, 2);
+    self.size = vec2(8, 14);
+    self.group = zi.entity.ENTITY_GROUP_PLAYER;
 }
 
 fn update(self: *Entity) void {
     // spawning?
-    if (self.base.anim.def == &anim_spawn) {
-        if (self.base.anim.looped() > 0) {
-            self.base.anim = zi.anim(&anim_idle);
+    if (self.anim.def == &anim_spawn) {
+        if (self.anim.looped() > 0) {
+            self.anim = zi.anim(&anim_idle);
         } else {
             return;
         }
     }
 
     // dying?
-    if (self.base.anim.def == &anim_die) {
-        if (self.base.anim.looped() > 0) {
-            engine.entityKill(self);
+    if (self.anim.def == &anim_die) {
+        if (self.anim.looped() > 0) {
+            zi.entity.entityKill(self);
         }
         return;
     }
 
-    self.base.friction.x = if (self.base.on_ground) FRICTION_GROUND else FRICTION_AIR;
+    self.friction.x = if (self.on_ground) FRICTION_GROUND else FRICTION_AIR;
 
     var did_move: bool = false;
     if (zi.input.stateb(LEFT)) {
-        self.base.accel.x = if (self.base.on_ground) -ACCEL_GROUND else -ACCEL_AIR;
+        self.accel.x = if (self.on_ground) -ACCEL_GROUND else -ACCEL_AIR;
         self.entity.player.flip = true;
         did_move = true;
     } else if (zi.input.stateb(RIGHT)) {
-        self.base.accel.x = if (self.base.on_ground) ACCEL_GROUND else ACCEL_AIR;
+        self.accel.x = if (self.on_ground) ACCEL_GROUND else ACCEL_AIR;
         self.entity.player.flip = false;
         did_move = true;
     } else {
-        self.base.accel.x = 0;
+        self.accel.x = 0;
     }
 
     if (zi.input.stateb(JUMP)) {
-        if (self.base.on_ground and self.entity.player.can_jump) {
-            self.base.vel.y = -JUMP_INITIAL_VEL;
+        if (self.on_ground and self.entity.player.can_jump) {
+            self.vel.y = -JUMP_INITIAL_VEL;
             self.entity.player.can_jump = false;
             self.entity.player.high_jump_time = JUMP_HIGH_TIME;
         } else if (self.entity.player.high_jump_time > 0) {
             self.entity.player.high_jump_time -= @as(f32, @floatCast(zi.engine.tick));
             const d = self.entity.player.high_jump_time;
             const f = @max(0, if (d < 0) zi.engine.tick + d else zi.engine.tick);
-            self.base.vel.y -= @as(f32, @floatCast(JUMP_HIGH_ACCEL * f));
+            self.vel.y -= @as(f32, @floatCast(JUMP_HIGH_ACCEL * f));
         }
     } else {
         self.entity.player.high_jump_time = 0;
@@ -126,79 +126,79 @@ fn update(self: *Entity) void {
     }
 
     if (zi.input.pressed(SHOOT)) {
-        const spawn_pos = self.base.pos.add(vec2(if (self.entity.player.flip) -3 else 5, 6));
-        if (engine.spawn(.projectile, spawn_pos)) |plasma| {
-            plasma.base.vel = vec2(if (self.entity.player.flip) -200 else 200, 0);
-            plasma.base.check_against = zi.entity.ENTITY_GROUP_ENEMY | zi.entity.ENTITY_GROUP_BREAKABLE;
-            plasma.base.anim = zi.anim(&anim_plasma_idle);
+        const spawn_pos = self.pos.add(vec2(if (self.entity.player.flip) -3 else 5, 6));
+        if (zi.entity.entitySpawn(.projectile, spawn_pos)) |plasma| {
+            plasma.vel = vec2(if (self.entity.player.flip) -200 else 200, 0);
+            plasma.check_against = zi.entity.ENTITY_GROUP_ENEMY | zi.entity.ENTITY_GROUP_BREAKABLE;
+            plasma.anim = zi.anim(&anim_plasma_idle);
             plasma.entity.projectile.flip = self.entity.player.flip;
-            plasma.base.anim.flip_x = self.entity.player.flip;
+            plasma.anim.flip_x = self.entity.player.flip;
             plasma.entity.projectile.anim_hit = &anim_plasma_hit;
             zi.sound.play(sound_plasma);
         }
     }
 
-    const was_on_ground = self.base.on_ground;
-    engine.baseUpdate(self);
+    const was_on_ground = self.on_ground;
+    zi.entity.entityBaseUpdate(self);
 
     // Just landed ?
-    if (!was_on_ground and self.base.on_ground) {
-        self.base.anim = zi.anim(&anim_land);
+    if (!was_on_ground and self.on_ground) {
+        self.anim = zi.anim(&anim_land);
     }
 
     // On ground?
-    else if (was_on_ground and (self.base.anim.def != &anim_land or self.base.anim.looped() > 0)) {
+    else if (was_on_ground and (self.anim.def != &anim_land or self.anim.looped() > 0)) {
         if (did_move) {
-            if (was_on_ground and self.base.anim.def != &anim_run) {
-                self.base.anim = zi.anim(&anim_run);
+            if (was_on_ground and self.anim.def != &anim_run) {
+                self.anim = zi.anim(&anim_run);
             }
             self.entity.player.idle_time = 0;
             self.entity.player.is_idle = false;
         } else {
-            if (!self.entity.player.is_idle or (!self.base.anim.def.?.loop and self.base.anim.looped() > 0)) {
+            if (!self.entity.player.is_idle or (!self.anim.def.?.loop and self.anim.looped() > 0)) {
                 self.entity.player.is_idle = true;
                 self.entity.player.idle_time = zi.utils.randFloat(3, 7);
-                self.base.anim = zi.anim(&anim_idle);
+                self.anim = zi.anim(&anim_idle);
             }
             self.entity.player.idle_time -= @as(f32, @floatCast(zi.engine.tick));
             if (self.entity.player.is_idle and self.entity.player.idle_time < 0) {
                 self.entity.player.idle_time = zi.utils.randFloat(3, 7);
-                self.base.anim = if (zi.utils.randInt(0, 1) == 0) zi.anim(&anim_scratch) else zi.anim(&anim_shrug);
+                self.anim = if (zi.utils.randInt(0, 1) == 0) zi.anim(&anim_scratch) else zi.anim(&anim_shrug);
             }
         }
     }
 
     // In air?
     else if (!was_on_ground) {
-        if (self.base.vel.y < 0) {
-            if (self.base.anim.def != &anim_jump) {
-                self.base.anim = zi.anim(&anim_jump);
+        if (self.vel.y < 0) {
+            if (self.anim.def != &anim_jump) {
+                self.anim = zi.anim(&anim_jump);
             }
         } else {
-            if (self.base.anim.def != &anim_fall) {
-                self.base.anim = zi.anim(&anim_fall);
+            if (self.anim.def != &anim_fall) {
+                self.anim = zi.anim(&anim_fall);
             }
         }
         self.entity.player.is_idle = false;
     }
 
-    self.base.anim.flip_x = self.entity.player.flip;
-    self.base.anim.tile_offset = if (self.entity.player.flip) 24 else 0;
+    self.anim.flip_x = self.entity.player.flip;
+    self.anim.tile_offset = if (self.entity.player.flip) 24 else 0;
 }
 
 fn damage(self: *Entity, _: *Entity, _: f32) void {
-    if (self.base.anim.def != &anim_die) {
-        self.base.anim = zi.anim(&anim_die);
+    if (self.anim.def != &anim_die) {
+        self.anim = zi.anim(&anim_die);
         for (0..5) |_| {
-            if (sgame.spawnParticle(self.base.pos, 70, 30, @as(f32, -std.math.pi / 2.0), @as(f32, std.math.pi / 2.0), &anim_gib)) |particle| {
-                particle.base.physics = zi.entity.ENTITY_PHYSICS_MOVE;
+            if (sgame.spawnParticle(self.pos, 70, 30, @as(f32, -std.math.pi / 2.0), @as(f32, std.math.pi / 2.0), &anim_gib)) |particle| {
+                particle.physics = zi.entity.ENTITY_PHYSICS_MOVE;
                 particle.entity.particle.life_time = 0.5;
                 particle.entity.particle.fade_time = 0.5;
             }
         }
 
-        if (sgame.spawnParticle(self.base.pos, 60, 10, @as(f32, -std.math.pi / 2.0), @as(f32, std.math.pi / 2.0), &anim_gib_gun)) |gun| {
-            gun.base.size = vec2(8, 8);
+        if (sgame.spawnParticle(self.pos, 60, 10, @as(f32, -std.math.pi / 2.0), @as(f32, std.math.pi / 2.0), &anim_gib_gun)) |gun| {
+            gun.size = vec2(8, 8);
         }
 
         zi.sound.play(sound_die);
@@ -209,7 +209,7 @@ fn kill(_: *Entity) void {
     sgame.respawn();
 }
 
-pub const vtab: EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .load = load,
     .init = init,
     .update = update,

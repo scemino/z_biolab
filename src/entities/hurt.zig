@@ -1,9 +1,9 @@
 const std = @import("std");
 const zi = @import("zimpact");
 const game = @import("../game.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const vec2 = zi.vec2;
-const engine = zi.Engine(game.Entity);
+const engine = zi.Engine;
 
 fn settings(self: *Entity, s: std.json.ObjectMap) void {
     self.entity.hurt.damage = @floatFromInt(s.get("damage").?.integer);
@@ -13,10 +13,10 @@ fn settings(self: *Entity, s: std.json.ObjectMap) void {
 }
 
 fn trigger(self: *Entity, other: *Entity) void {
-    engine.entityDamage(other, self, self.entity.hurt.damage);
+    zi.entity.entityDamage(other, self, self.entity.hurt.damage);
 }
 
-pub const vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .settings = settings,
     .trigger = trigger,
 };

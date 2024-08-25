@@ -3,10 +3,10 @@ const zi = @import("zimpact");
 const game = @import("../game.zig");
 const g = @import("../global.zig");
 const credits = @import("../scenes/credits.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const vec2 = zi.vec2;
 const vec2i = zi.vec2i;
-const engine = zi.Engine(game.Entity);
+const engine = zi.Engine;
 
 var anim_idle: zi.AnimDef = undefined;
 var anim_activated: zi.AnimDef = undefined;
@@ -24,9 +24,9 @@ fn load() void {
 }
 
 fn init(self: *Entity) void {
-    self.base.anim = zi.anim(&anim_idle);
-    self.base.size = vec2(24, 24);
-    self.base.draw_order = -1;
+    self.anim = zi.anim(&anim_idle);
+    self.size = vec2(24, 24);
+    self.draw_order = -1;
 }
 
 fn update(self: *Entity) void {
@@ -45,23 +45,23 @@ fn trigger(self: *Entity, _: *Entity) void {
 
     if (self.entity.end_hub.stage == 1) {
         zi.sound.play(sound_activate);
-        self.base.anim = zi.anim(&anim_activated);
+        self.anim = zi.anim(&anim_activated);
     }
 
     // Stage 2 - plasma animation
     else if (self.entity.end_hub.stage == 2) {
         zi.sound.play(sound_the_end);
-        const sp = vec2(self.base.pos.x, self.base.pos.y - 24);
+        const sp = vec2(self.pos.x, self.pos.y - 24);
         for (0..100) |i| {
-            if (engine.spawn(.end_hub_plasma, sp)) |p| {
-                p.entity.end_hub_plasma.index = i;
+            if (zi.entity.entitySpawn(.end_hub_plasma, sp)) |p| {
+                p.entity.end_hub_plasma.index = @intCast(i);
             }
         }
     }
 
     // Stage 3 - fade to white
     else if (self.entity.end_hub.stage == 3) {
-        _ = engine.spawn(.end_hub_fade, self.base.pos);
+        _ = zi.entity.entitySpawn(.end_hub_fade, self.pos);
     }
 
     // Stage 4 - end the game
@@ -70,7 +70,7 @@ fn trigger(self: *Entity, _: *Entity) void {
     }
 }
 
-pub const vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .load = load,
     .init = init,
     .update = update,

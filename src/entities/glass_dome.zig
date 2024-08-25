@@ -3,10 +3,10 @@ const zi = @import("zimpact");
 const game = @import("../game.zig");
 const g = @import("../global.zig");
 const sgame = @import("../scenes/game.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const vec2 = zi.vec2;
 const vec2i = zi.vec2i;
-const engine = zi.Engine(game.Entity);
+const engine = zi.Engine;
 
 var anim_idle: zi.AnimDef = undefined;
 var anim_shards: zi.AnimDef = undefined;
@@ -26,33 +26,33 @@ fn load() void {
 }
 
 fn init(self: *Entity) void {
-    self.base.anim = zi.anim(&anim_idle);
-    self.base.size = vec2(40, 32);
-    self.base.health = 80;
+    self.anim = zi.anim(&anim_idle);
+    self.size = vec2(40, 32);
+    self.health = 80;
 
-    self.base.group = zi.entity.ENTITY_GROUP_BREAKABLE;
-    self.base.check_against = zi.entity.ENTITY_GROUP_NONE;
-    self.base.physics = zi.entity.ENTITY_PHYSICS_FIXED;
+    self.group = zi.entity.ENTITY_GROUP_BREAKABLE;
+    self.check_against = zi.entity.ENTITY_GROUP_NONE;
+    self.physics = zi.entity.ENTITY_PHYSICS_FIXED;
 }
 
 fn damage(self: *Entity, other: *Entity, value: f32) void {
     zi.sound.play(sound_impact);
 
     for (0..3) |_| {
-        _ = sgame.spawnParticle(other.base.pos, 120, 30, 0, std.math.pi, &anim_shards);
+        _ = sgame.spawnParticle(other.pos, 120, 30, 0, std.math.pi, &anim_shards);
     }
-    engine.entityBaseDamage(self, other, value);
+    zi.entity.entityBaseDamage(self, other, value);
 }
 
 fn kill(self: *Entity) void {
     zi.sound.play(sound_shatter);
     for (0..100) |_| {
-        const spawn_pos = vec2(zi.utils.randFloat(self.base.pos.x, self.base.pos.x + self.base.size.x), zi.utils.randFloat(self.base.pos.y, self.base.pos.y + self.base.size.y));
+        const spawn_pos = vec2(zi.utils.randFloat(self.pos.x, self.pos.x + self.size.x), zi.utils.randFloat(self.pos.y, self.pos.y + self.size.y));
         _ = sgame.spawnParticle(spawn_pos, 120, 30, 0, std.math.pi, &anim_shards);
     }
 }
 
-pub const vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .load = load,
     .init = init,
     .damage = damage,

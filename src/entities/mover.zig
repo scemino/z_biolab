@@ -1,10 +1,10 @@
 const std = @import("std");
 const zi = @import("zimpact");
 const game = @import("../game.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const vec2 = zi.vec2;
 const vec2i = zi.vec2i;
-const engine = zi.Engine(game.Entity);
+const engine = zi.Engine;
 
 var anim_idle: zi.AnimDef = undefined;
 
@@ -15,15 +15,15 @@ fn load() void {
 }
 
 fn init(self: *Entity) void {
-    self.base.anim = zi.anim(&anim_idle);
-    self.base.size = vec2(24, 8);
-    self.base.physics = zi.entity.ENTITY_PHYSICS_FIXED;
-    self.base.gravity = 0;
+    self.anim = zi.anim(&anim_idle);
+    self.size = vec2(24, 8);
+    self.physics = zi.entity.ENTITY_PHYSICS_FIXED;
+    self.gravity = 0;
     self.entity.mover.speed = 20;
 }
 
 fn settings(self: *Entity, s: std.json.ObjectMap) void {
-    self.entity.mover.targets = engine.entitiesFromJsonNames(s.get("target").?.object);
+    self.entity.mover.targets = zi.entity.entitiesFromJsonNames(s.get("target").?.object);
     self.entity.mover.speed = zi.utils.jsonFloat(s.get("speed"));
     if (self.entity.mover.speed == 0) {
         self.entity.mover.speed = 20;
@@ -31,28 +31,28 @@ fn settings(self: *Entity, s: std.json.ObjectMap) void {
 }
 
 fn update(self: *Entity) void {
-    if (self.entity.mover.targets.items.len == 0) {
+    if (self.entity.mover.targets.entities.len == 0) {
         return;
     }
 
-    const target = engine.entityByRef(self.entity.mover.targets.items[self.entity.mover.current_target]);
+    const target = zi.entity.entityByRef(self.entity.mover.targets.entities[@intCast(self.entity.mover.current_target)]);
 
-    const prev_distance = engine.entityDist(self, target.?);
-    const angle = engine.entityAngle(self, target.?);
-    self.base.vel = zi.types.fromAngle(angle).mulf(self.entity.mover.speed);
+    const prev_distance = zi.entity.entityDist(self, target.?);
+    const angle = zi.entity.entityAngle(self, target.?);
+    self.vel = zi.types.fromAngle(angle).mulf(self.entity.mover.speed);
 
-    engine.baseUpdate(self);
+    zi.entity.entityBaseUpdate(self);
 
     // Are we close to the target or has the distance actually increased?
     // . Set new target
-    const cur_distance = engine.entityDist(self, target.?);
+    const cur_distance = zi.entity.entityDist(self, target.?);
     if ((cur_distance > prev_distance or cur_distance < 0.5)) {
-        self.base.pos = target.?.base.pos.add(target.?.base.size.mulf(0.5)).sub(self.base.size.mulf(0.5));
-        self.entity.mover.current_target = (self.entity.mover.current_target + 1) % self.entity.mover.targets.items.len;
+        self.pos = target.?.pos.add(target.?.size.mulf(0.5)).sub(self.size.mulf(0.5));
+        self.entity.mover.current_target = @intCast((@as(usize, @intCast(self.entity.mover.current_target + 1))) % self.entity.mover.targets.entities.len);
     }
 }
 
-pub const vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .load = load,
     .init = init,
     .settings = settings,

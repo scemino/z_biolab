@@ -3,9 +3,8 @@ const zi = @import("zimpact");
 const game = @import("../game.zig");
 const scene_game = @import("../scenes/game.zig");
 const stats = @import("../scenes/stats.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const vec2 = zi.vec2;
-const engine = zi.Engine(game.Entity);
 
 var level_path_buffer: [64]u8 = undefined;
 
@@ -16,10 +15,10 @@ fn settings(self: *Entity, s: std.json.ObjectMap) void {
 
 fn trigger(self: *Entity, _: *Entity) void {
     scene_game.setLevelPath(self.entity.level_change.path);
-    engine.setScene(&stats.scene);
+    zi.Engine.setScene(&stats.scene);
 }
 
-pub const vtab: zi.EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .settings = settings,
     .trigger = trigger,
 };

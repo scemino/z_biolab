@@ -3,7 +3,7 @@ const zi = @import("zimpact");
 const game = @import("../game.zig");
 const sgame = @import("../scenes/game.zig");
 const g = @import("../global.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const EntityVtab = zi.EntityVtab;
 const Image = zi.Image;
 const Anim = zi.Anim;
@@ -12,8 +12,6 @@ const vec2i = zi.vec2i;
 const vec2 = zi.vec2;
 const Vec2 = zi.Vec2;
 const animDef = zi.animDef;
-const Engine = zi.Engine;
-const engine = Engine(game.Entity);
 
 var anim_idle: AnimDef = undefined;
 var anim_shoot: AnimDef = undefined;
@@ -40,78 +38,76 @@ fn load() void {
 }
 
 fn init(self: *Entity) void {
-    self.base.anim = zi.anim(&anim_idle);
-    self.base.size = vec2(14, 8);
-    self.base.offset = vec2(1, 0);
-    self.base.group = zi.entity.ENTITY_GROUP_ENEMY;
-    self.base.check_against = zi.entity.ENTITY_GROUP_PLAYER;
-    self.base.health = 80;
+    self.anim = zi.anim(&anim_idle);
+    self.size = vec2(14, 8);
+    self.offset = vec2(1, 0);
+    self.group = zi.entity.ENTITY_GROUP_ENEMY;
+    self.check_against = zi.entity.ENTITY_GROUP_PLAYER;
+    self.health = 80;
     self.entity.dropper.shoot_wait_time = 1;
     self.entity.dropper.shoot_time = 10;
     self.entity.dropper.can_shoot = false;
 }
 
 fn update(self: *Entity) void {
-    const player = engine.entityByRef(g.player);
+    const player = zi.entity.entityByRef(g.player);
 
     self.entity.dropper.shoot_wait_time -= @as(f32, @floatCast(zi.engine.tick));
     self.entity.dropper.shoot_time -= @as(f32, @floatCast(zi.engine.tick));
 
-    if (self.base.anim.def == &anim_hit and self.base.anim.looped() > 0) {
-        self.base.anim.def = &anim_idle;
+    if (self.anim.def == &anim_hit and self.anim.looped() > 0) {
+        self.anim.def = &anim_idle;
         self.entity.dropper.shoot_wait_time = 0.5;
-    } else if (self.base.anim.def == &anim_idle and
+    } else if (self.anim.def == &anim_idle and
         self.entity.dropper.shoot_wait_time < 0 and
-        self.base.pos.dist(player.?.base.pos) < 128)
+        self.pos.dist(player.?.pos) < 128)
     {
-        self.base.anim = zi.anim(&anim_shoot);
+        self.anim = zi.anim(&anim_shoot);
         self.entity.dropper.shoot_time = 0.8;
         self.entity.dropper.can_shoot = true;
-    } else if (self.base.anim.def == &anim_shoot and
+    } else if (self.anim.def == &anim_shoot and
         self.entity.dropper.can_shoot and
         self.entity.dropper.shoot_time < 0)
     {
         self.entity.dropper.can_shoot = false;
-        const drop_pos = self.base.pos.add(vec2(5, 6));
-        if (engine.spawn(.projectile, drop_pos)) |drop| {
-            drop.base.size = vec2(4, 4);
-            drop.base.gravity = 1;
-            drop.base.offset = vec2(2, 4);
-            drop.base.check_against = zi.entity.ENTITY_GROUP_PLAYER | zi.entity.ENTITY_GROUP_BREAKABLE;
-            drop.base.anim = zi.anim(&anim_shot_idle);
+        const drop_pos = self.pos.add(vec2(5, 6));
+        if (zi.entity.entitySpawn(.projectile, drop_pos)) |drop| {
+            drop.size = vec2(4, 4);
+            drop.gravity = 1;
+            drop.offset = vec2(2, 4);
+            drop.check_against = zi.entity.ENTITY_GROUP_PLAYER | zi.entity.ENTITY_GROUP_BREAKABLE;
+            drop.anim = zi.anim(&anim_shot_idle);
             drop.entity.projectile.anim_hit = &anim_shot_hit;
-            drop.base.vel = vec2(0, 0);
+            drop.vel = vec2(0, 0);
         }
     }
 
-    if (self.base.anim.def == &anim_shoot and self.base.anim.looped() > 0) {
-        self.base.anim = zi.anim(&anim_idle);
+    if (self.anim.def == &anim_shoot and self.anim.looped() > 0) {
+        self.anim = zi.anim(&anim_idle);
         self.entity.dropper.shoot_wait_time = 0.5;
     }
 
-    engine.baseUpdate(self);
+    zi.entity.entityBaseUpdate(self);
 }
 
 fn damage(self: *Entity, other: *Entity, value: f32) void {
-    self.base.anim = zi.anim(&anim_hit);
-    self.entity.blob.seen_player = true;
-    self.entity.blob.in_jump = false;
-    self.base.vel.x = if (other.base.vel.x > 0) 50 else -50;
+    self.anim = zi.anim(&anim_hit);
+    self.vel.x = if (other.vel.x > 0) 50 else -50;
 
-    const gib_count: usize = if (self.base.health <= value) 20 else 3;
+    const gib_count: usize = if (self.health <= value) 20 else 3;
     for (0..gib_count) |_| {
-        _ = sgame.spawnParticle(self.base.pos, 120, 30, other.base.vel.toAngle(), std.math.pi / 4.0, &anim_gib);
+        _ = sgame.spawnParticle(self.pos, 120, 30, other.vel.toAngle(), std.math.pi / 4.0, &anim_gib);
     }
 
     zi.sound.play(sound_gib);
-    engine.entityBaseDamage(self, other, value);
+    zi.entity.entityBaseDamage(self, other, value);
 }
 
 fn touch(self: *Entity, other: *Entity) void {
-    engine.entityDamage(other, self, 10);
+    zi.entity.entityDamage(other, self, 10);
 }
 
-pub const vtab: EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .load = load,
     .init = init,
     .update = update,

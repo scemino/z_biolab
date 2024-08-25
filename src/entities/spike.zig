@@ -3,7 +3,7 @@ const zi = @import("zimpact");
 const game = @import("../game.zig");
 const sgame = @import("../scenes/game.zig");
 const g = @import("../global.zig");
-const Entity = game.Entity;
+const Entity = zi.Entity;
 const EntityVtab = zi.EntityVtab;
 const Image = zi.Image;
 const Anim = zi.Anim;
@@ -13,7 +13,7 @@ const vec2 = zi.vec2;
 const Vec2 = zi.Vec2;
 const animDef = zi.animDef;
 const Engine = zi.Engine;
-const engine = Engine(game.Entity);
+const engine = zi.Engine;
 
 var anim_crawl: AnimDef = undefined;
 var anim_shoot: AnimDef = undefined;
@@ -39,95 +39,97 @@ fn load() void {
 }
 
 fn init(self: *Entity) void {
-    self.base.group = zi.entity.ENTITY_GROUP_ENEMY;
-    self.base.check_against = zi.entity.ENTITY_GROUP_PLAYER;
-    self.base.size = vec2(16, 9);
-    self.base.offset = vec2(0, 7);
-    self.base.health = 30;
-    self.base.anim = zi.anim(&anim_crawl);
-    self.base.physics = zi.entity.ENTITY_PHYSICS_PASSIVE;
+    self.group = zi.entity.ENTITY_GROUP_ENEMY;
+    self.check_against = zi.entity.ENTITY_GROUP_PLAYER;
+    self.size = vec2(16, 9);
+    self.offset = vec2(0, 7);
+    self.health = 30;
+    self.anim = zi.anim(&anim_crawl);
+    self.physics = zi.entity.ENTITY_PHYSICS_PASSIVE;
     self.entity.spike.shoot_wait_time = 10;
 }
 
 fn shoot(pos: Vec2, vel: Vec2) void {
-    if (engine.spawn(.projectile, pos)) |spike| {
-        spike.base.size = vec2(4, 4);
-        spike.base.offset = vec2(2, 2);
-        spike.base.check_against = zi.entity.ENTITY_GROUP_PLAYER | zi.entity.ENTITY_GROUP_BREAKABLE;
-        spike.base.anim = zi.anim(&anim_shot_idle);
+    if (zi.entity.entitySpawn(.projectile, pos)) |spike| {
+        spike.size = vec2(4, 4);
+        spike.offset = vec2(2, 2);
+        spike.check_against = zi.entity.ENTITY_GROUP_PLAYER | zi.entity.ENTITY_GROUP_BREAKABLE;
+        spike.anim = zi.anim(&anim_shot_idle);
         spike.entity.projectile.anim_hit = &anim_shot_hit;
-        spike.base.vel = vel;
+        spike.vel = vel;
     }
 }
 
 fn update(self: *Entity) void {
-    const player = engine.entityByRef(g.player);
+    const player = zi.entity.entityByRef(g.player);
 
     // shooting
-    if (self.base.anim.def == &anim_shoot) {
+    if (self.anim.def == &anim_shoot) {
 
         // end shooting
-        if (self.base.anim.looped() > 0) {
-            self.base.anim = zi.anim(&anim_crawl);
+        if (self.anim.looped() > 0) {
+            self.anim = zi.anim(&anim_crawl);
         }
 
         // spawn spikes
         self.entity.spike.shoot_time -= @as(f32, @floatCast(zi.engine.tick));
         if (self.entity.spike.can_shoot and self.entity.spike.shoot_time < 0) {
             self.entity.spike.can_shoot = false;
-            shoot(self.base.pos.add(vec2(6, -4)), vec2(0, -60));
-            shoot(self.base.pos.add(vec2(1, -2)), vec2(-60, 0));
-            shoot(self.base.pos.add(vec2(10, -2)), vec2(60, 0));
+            shoot(self.pos.add(vec2(6, -4)), vec2(0, -60));
+            shoot(self.pos.add(vec2(1, -2)), vec2(-60, 0));
+            shoot(self.pos.add(vec2(10, -2)), vec2(60, 0));
         }
     }
 
     // Crawling
-    else if (self.base.anim.def == &anim_crawl) {
+    else if (self.anim.def == &anim_crawl) {
         self.entity.spike.shoot_wait_time -= @as(f32, @floatCast(zi.engine.tick));
         // Init shoot
         if (self.entity.spike.shoot_wait_time < 0 and
-            player.?.base.pos.dist(self.base.pos) < 160)
+            player.?.pos.dist(self.pos) < 160)
         {
-            self.base.anim = zi.anim(&anim_shoot);
+            self.anim = zi.anim(&anim_shoot);
             self.entity.spike.shoot_wait_time = 5;
             self.entity.spike.shoot_time = 1.2;
             self.entity.spike.can_shoot = true;
-            self.base.vel.x = 0;
+            self.vel.x = 0;
         }
 
         // Crawl on
         else {
-            const check_pos = vec2(self.base.pos.x + if (self.entity.spike.flip) 4 else self.base.size.x - 4, self.base.pos.y + self.base.size.y + 1);
+            const check_pos = vec2(self.pos.x + if (self.entity.spike.flip) 4 else self.size.x - 4, self.pos.y + self.size.y + 1);
 
             // Near abyss? return!
             if (zi.engine.collision_map.?.tileAtPx(check_pos) == 0) {
                 self.entity.spike.flip = !self.entity.spike.flip;
             }
-            self.base.vel.x = if (self.entity.spike.flip) -14 else 14;
+            self.vel.x = if (self.entity.spike.flip) -14 else 14;
         }
     }
 
     // Hit anim finished?
-    else if (self.base.anim.def == &anim_hit and self.base.anim.looped() > 0) {
-        self.base.anim = zi.anim(&anim_crawl);
+    else if (self.anim.def == &anim_hit and self.anim.looped() > 0) {
+        self.anim = zi.anim(&anim_crawl);
     }
 
-    engine.baseUpdate(self);
+    _ = zi.entity.entitiesByProximity(game.EntityKind.player, self, 30);
+
+    zi.entity.entityBaseUpdate(self);
 }
 
 fn damage(self: *Entity, other: *Entity, value: f32) void {
-    self.base.anim = zi.anim(&anim_hit);
-    self.base.vel.x = if (other.base.vel.x > 0) 50 else -50;
+    self.anim = zi.anim(&anim_hit);
+    self.vel.x = if (other.vel.x > 0) 50 else -50;
 
-    const gib_count: usize = if (self.base.health <= value) 15 else 3;
+    const gib_count: usize = if (self.health <= value) 15 else 3;
     for (0..gib_count) |_| {
-        if (sgame.spawnParticle(engine.entityCenter(self), 120, 30, other.base.vel.toAngle(), std.math.pi / 4.0, &anim_gib)) |particle| {
-            particle.base.offset = vec2(2, 2);
+        if (sgame.spawnParticle(zi.entity.entityCenter(self), 120, 30, other.vel.toAngle(), std.math.pi / 4.0, &anim_gib)) |particle| {
+            particle.offset = vec2(2, 2);
         }
     }
 
     zi.sound.play(sound_gib);
-    engine.entityBaseDamage(self, other, value);
+    zi.entity.entityBaseDamage(self, other, value);
 }
 
 fn collide(self: *Entity, normal: Vec2, _: ?zi.Trace) void {
@@ -137,10 +139,10 @@ fn collide(self: *Entity, normal: Vec2, _: ?zi.Trace) void {
 }
 
 fn touch(self: *Entity, other: *Entity) void {
-    engine.entityDamage(other, self, 10);
+    zi.entity.entityDamage(other, self, 10);
 }
 
-pub const vtab: EntityVtab(Entity) = .{
+pub const vtab: zi.EntityVtab = .{
     .load = load,
     .init = init,
     .update = update,

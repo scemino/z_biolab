@@ -7,21 +7,20 @@ const player = @import("../entities/player.zig");
 const Scene = zi.Scene;
 const Image = zi.Image;
 const font = zi.font;
-const Engine = zi.Engine(game.Entity);
 const engine = zi.engine;
 const scale = zi.utils.scale;
 const vec2 = zi.vec2;
 
 fn update() void {
-    Engine.sceneBaseUpdate();
+    zi.Engine.sceneBaseUpdate();
 
     if (zi.input.pressed(player.SHOOT) or zi.input.pressed(player.JUMP)) {
-        Engine.setScene(&scene_game.scene);
+        zi.Engine.setScene(&scene_game.scene);
     }
 }
 
 fn draw() void {
-    Engine.baseDraw();
+    zi.Engine.sceneBaseDraw();
 
     var buf: [64]u8 = undefined;
     g.font.draw(vec2(@as(f32, @floatFromInt(zi.render.renderSize().x)) / 2.0, 20), "Level Complete!", .FONT_ALIGN_CENTER);
