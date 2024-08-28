@@ -93,8 +93,8 @@ fn update() void {
 fn draw() void {
     zi.Engine.sceneBaseDraw();
 
-    // var buf: [128]u8 = undefined;
-    // const text = std.fmt.bufPrint(&buf, "total: {d:.2}ms, update: {d:.2}ms, draw: {d:.2}ms\ndraw calls: {}, entities: {}, checks: {}\nentities mem: {:.1}/{}/{}", .{
+    // var buf: [156]u8 = undefined;
+    // const text = std.fmt.bufPrint(&buf, "total: {d:.2}ms, update: {d:.2}ms, draw: {d:.2}ms\ndraw calls: {}, entities: {}, checks: {}\nentities mem: {:.1}/{}/{}\nbump: {:.1}/{}", .{
     //     zi.engine.perf.total * 1000,
     //     zi.engine.perf.update * 1000,
     //     zi.engine.perf.draw * 1000,
@@ -104,6 +104,8 @@ fn draw() void {
     //     std.fmt.fmtIntSizeBin(@sizeOf(zi.Entity) * options.ENTITIES_MAX),
     //     std.fmt.fmtIntSizeBin(@sizeOf(zi.Entity)),
     //     std.fmt.fmtIntSizeBin(@sizeOf(game.UEntity)),
+    //     std.fmt.fmtIntSizeBin(zi.alloc.bumpMark().index),
+    //     std.fmt.fmtIntSizeBin(options.ALLOC_SIZE),
     // }) catch @panic("failed to format string");
     // // Draw some debug info...
     // g.font.draw(vec2(2, 2), text, .FONT_ALIGN_LEFT);

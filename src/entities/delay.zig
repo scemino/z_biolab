@@ -18,7 +18,9 @@ fn update(self: *Entity) void {
 
     for (self.entity.delay.targets.entities) |e| {
         if (zi.entity.entityByRef(e)) |target| {
-            zi.entity.entityTrigger(target, zi.entity.entityByRef(self.entity.delay.triggered_by).?);
+            if (zi.entity.entityByRef(self.entity.delay.triggered_by)) |ent| {
+                zi.entity.entityTrigger(target, ent);
+            }
         }
     }
 }

@@ -17,11 +17,22 @@ const title = @import("scenes/title.zig");
 /// particular game. Increase them as needed. Allocating a few GB and thousands
 /// of entities is totally fine.
 pub const zi_options = .{
-    .ALLOC_SIZE = (32 * 1024 * 1024),
+    .ALLOC_SIZE = (62 * 1024 * 1024),
     .ALLOC_TEMP_OBJECTS_MAX = 8,
+    .ENGINE_MAX_TICK = 0.1,
+    .ENGINE_MAX_BACKGROUND_MAPS = 4,
     .ENTITIES_MAX = 1024,
+    .ENTITY_MAX_SIZE = 64,
+    .ENTITY_MIN_BOUNCE_VELOCITY = 10,
     .ENTITY_TYPE = game.UEntity,
     .RENDER_RESIZE_MODE = zi.options.RENDER_RESIZE_WIDTH,
+    .RENDER_SIZE = zi.vec2i(240, 160),
+    .RENDER_SCALE_MODE = zi.options.RENDER_SCALE_DISCRETE,
+    .WINDOW_TITLE = "Z Biolab Disaster",
+    .WINDOW_SIZE = zi.vec2i(240, 160).muli(4),
+    .SOUND_MAX_UNCOMPRESSED_SAMPLES = 64 * 1024,
+    .SOUND_MAX_SOURCES = 64,
+    .SOUND_MAX_NODES = 256,
 };
 
 fn init() void {
@@ -44,10 +55,10 @@ fn init() void {
 
     g.noise = zi.noise.noise(8);
     g.player = zi.entity.entityRefNone();
-    // g.music = zi.sound.sound(zi.sound.source("assets/music/biochemie.qoa")).?;
-    // zi.sound.setLoop(g.music, true);
+    g.music = zi.sound.sound(zi.sound.source("assets/music/biochemie.qoa")).?;
+    zi.sound.setLoop(g.music, true);
 
-    // zi.sound.setGlobalVolume(0.75);
+    zi.sound.setGlobalVolume(0.75);
     zi.Engine.setScene(&title.scene);
 }
 
@@ -82,9 +93,6 @@ pub fn main() void {
 
     zi.Engine.run(.{
         .vtabs = &vtabs,
-        .window_title = "Z Biolab Disaster",
-        .render_size = zi.vec2i(240, 160),
-        .window_size = zi.vec2i(240, 160).muli(4),
         .init = init,
     });
 }
