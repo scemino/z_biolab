@@ -1,3 +1,5 @@
+// EDITOR_IGNORE(true);
+
 const std = @import("std");
 const zi = @import("zimpact");
 const game = @import("../game.zig");

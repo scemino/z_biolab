@@ -1,3 +1,7 @@
+// EDITOR_SIZE(14, 8);
+// EDITOR_RESIZE(false);
+// EDITOR_COLOR(255, 155, 32);
+
 const std = @import("std");
 const zi = @import("zimpact");
 const game = @import("../game.zig");
