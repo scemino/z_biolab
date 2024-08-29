@@ -1,6 +1,7 @@
 const std = @import("std");
 const sokol = @import("sokol");
 
+var dep_sokol: *std.Build.Dependency = undefined;
 var dep_zi: *std.Build.Dependency = undefined;
 var assets_step: *std.Build.Step = undefined;
 
@@ -73,13 +74,13 @@ pub fn build(b: *std.Build) !void {
         }
     }
 
-    // build Z Drop sample
+    // build Z Biolab sample
     dep_zi = b.dependency("zimpact", .{
         .target = target,
         .optimize = optimize,
     });
 
-    const dep_sokol = b.dependency("sokol", .{
+    dep_sokol = b.dependency("sokol", .{
         .target = target,
         .optimize = optimize,
     });
@@ -96,7 +97,6 @@ pub fn build(b: *std.Build) !void {
             .optimize = optimize,
         });
         exe.root_module.addImport("zimpact", dep_zi.module("zimpact"));
-        exe.root_module.addImport("sokol", dep_sokol.module("sokol"));
 
         const run_cmd = b.addRunArtifact(exe);
         run_cmd.step.dependOn(&b.addInstallArtifact(exe, .{}).step);
@@ -108,7 +108,7 @@ pub fn build(b: *std.Build) !void {
         run_step.dependOn(assets_step);
         run_step.dependOn(&run_cmd.step);
     } else {
-        try buildWeb(b, target, optimize, dep_sokol);
+        try buildWeb(b, target, optimize);
     }
 }
 
@@ -121,7 +121,7 @@ fn convert(b: *std.Build, tool: *std.Build.Step.Compile, input: []const u8, outp
 }
 
 // for web builds, the Zig code needs to be built into a library and linked with the Emscripten linker
-fn buildWeb(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode, dep_sokol: *std.Build.Dependency) !void {
+fn buildWeb(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) !void {
     const sample = b.addStaticLibrary(.{
         .name = "zbiolab",
         .target = target,

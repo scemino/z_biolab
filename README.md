@@ -16,7 +16,7 @@ All the assets are converted during the build you have nothing more to do than:
 ### Web
 
 1. Clone this repository
-2. `zig build -Dtarget=wasm32-emscripten run`
+2. `zig build -Doptimize=ReleaseSmall -Dtarget=wasm32-emscripten run`
 
 ## License
 
