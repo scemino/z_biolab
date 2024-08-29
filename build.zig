@@ -1,40 +1,12 @@
 const std = @import("std");
+const sokol = @import("sokol");
+
+var dep_zi: *std.Build.Dependency = undefined;
+var assets_step: *std.Build.Step = undefined;
 
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-
-    const dep_sokol = b.dependency("sokol", .{
-        .target = target,
-        .optimize = optimize,
-    });
-
-    const dep_zi = b.dependency("zimpact", .{
-        .target = target,
-        .optimize = optimize,
-    });
-
-    const exe = b.addExecutable(.{
-        .name = "zbiolab",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
-    exe.root_module.addImport("sokol", dep_sokol.module("sokol"));
-    exe.root_module.addImport("zimpact", dep_zi.module("zimpact"));
-
-    b.installArtifact(exe);
-
-    const run_cmd = b.addRunArtifact(exe);
-    run_cmd.step.dependOn(b.getInstallStep());
-
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
-
-    const run_step = b.step("run", "Run the app");
-    run_step.dependOn(&run_cmd.step);
 
     // build qoiconv executable
     const qoiconv_exe = b.addExecutable(.{
@@ -64,6 +36,11 @@ pub fn build(b: *std.Build) !void {
     const qoaconv_step = b.step("qoaconv", "Build qoaconv");
     qoaconv_step.dependOn(&qoaconv_exe.step);
 
+    // convert the assets and install them
+    assets_step = b.step("assets", "Build assets");
+    assets_step.dependOn(qoiconv_step);
+    assets_step.dependOn(qoaconv_step);
+
     const asset_dir = "assets";
     const dir = try std.fs.cwd().openDir(asset_dir, .{ .iterate = true });
     var walker = try dir.walk(b.allocator);
@@ -81,25 +58,95 @@ pub fn build(b: *std.Build) !void {
                 if (std.mem.eql(u8, ext, ".png")) {
                     // convert .png to .qoi
                     const output = if (out_dir) |d| b.fmt("assets/{s}/{s}.qoi", .{ d, file }) else b.fmt("assets/{s}.qoi", .{file});
-                    convert(b, qoiconv_exe, input, output);
+                    assets_step.dependOn(&convert(b, qoiconv_exe, input, output).step);
                 } else if (std.mem.eql(u8, ext, ".wav")) {
                     // convert .wav to .qoa
                     const output = if (out_dir) |d| b.fmt("assets/{s}/{s}.qoa", .{ d, file }) else b.fmt("assets/{s}.qoa", .{file});
-                    convert(b, qoaconv_exe, input, output);
+                    assets_step.dependOn(&convert(b, qoaconv_exe, input, output).step);
                 } else {
                     // just copy the asset
                     const output = if (out_dir) |d| b.fmt("assets/{s}/{s}{s}", .{ d, file, ext }) else b.fmt("assets/{s}{s}", .{ file, ext });
-                    b.getInstallStep().dependOn(&b.addInstallFileWithDir(b.path(input), .bin, output).step);
+                    assets_step.dependOn(&b.addInstallFileWithDir(b.path(input), .bin, output).step);
                 }
             },
             else => {},
         }
     }
+
+    // build Z Drop sample
+    dep_zi = b.dependency("zimpact", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const dep_sokol = b.dependency("sokol", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const sample: []const u8 = "zbiolab";
+
+    if (!target.result.isWasm()) {
+        const run_step = b.step(b.fmt("run", .{}), "Run zbiolab");
+        // for native platforms, build into a regular executable
+        const exe = b.addExecutable(.{
+            .name = sample,
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        });
+        exe.root_module.addImport("zimpact", dep_zi.module("zimpact"));
+        exe.root_module.addImport("sokol", dep_sokol.module("sokol"));
+
+        const run_cmd = b.addRunArtifact(exe);
+        run_cmd.step.dependOn(&b.addInstallArtifact(exe, .{}).step);
+
+        if (b.args) |args| {
+            run_cmd.addArgs(args);
+        }
+
+        run_step.dependOn(assets_step);
+        run_step.dependOn(&run_cmd.step);
+    } else {
+        try buildWeb(b, target, optimize, dep_sokol);
+    }
 }
 
-fn convert(b: *std.Build, tool: *std.Build.Step.Compile, input: []const u8, output: []const u8) void {
+fn convert(b: *std.Build, tool: *std.Build.Step.Compile, input: []const u8, output: []const u8) *std.Build.Step.InstallFile {
     const tool_step = b.addRunArtifact(tool);
     tool_step.addFileArg(b.path(input));
     const out = tool_step.addOutputFileArg(std.fs.path.basename(output));
-    b.getInstallStep().dependOn(&b.addInstallBinFile(out, output).step);
+    // b.getInstallStep().dependOn(&b.addInstallBinFile(out, output).step);
+    return b.addInstallBinFile(out, output);
+}
+
+// for web builds, the Zig code needs to be built into a library and linked with the Emscripten linker
+fn buildWeb(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode, dep_sokol: *std.Build.Dependency) !void {
+    const sample = b.addStaticLibrary(.{
+        .name = "zbiolab",
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = b.path("src/main.zig"),
+    });
+    sample.root_module.addImport("zimpact", dep_zi.module("zimpact"));
+    sample.root_module.addImport("sokol", dep_sokol.module("sokol"));
+
+    // create a build step which invokes the Emscripten linker
+    const emsdk = dep_sokol.builder.dependency("emsdk", .{});
+    const link_step = try sokol.emLinkStep(b, .{
+        .lib_main = sample,
+        .target = target,
+        .optimize = optimize,
+        .emsdk = emsdk,
+        .use_webgl2 = true,
+        .use_emmalloc = true,
+        .use_filesystem = true,
+        .shell_file_path = "web/shell.html",
+        .extra_args = &.{ "-sUSE_OFFSET_CONVERTER=1", "--preload-file", "zig-out/bin/assets@assets" },
+    });
+    // ...and a special run step to start the web build output via 'emrun'
+    const run = sokol.emRunStep(b, .{ .name = "zbiolab", .emsdk = emsdk });
+    run.step.dependOn(assets_step);
+    run.step.dependOn(&link_step.step);
+    b.step("run", "Run zbiolab").dependOn(&run.step);
 }
