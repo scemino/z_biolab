@@ -29,6 +29,7 @@ pub const zi_options = .{
     .RENDER_SIZE = zi.vec2i(240, 160),
     .RENDER_SCALE_MODE = zi.options.RENDER_SCALE_DISCRETE,
     .WINDOW_TITLE = "Z Biolab Disaster",
+    .RENDER_BUFFER_CAPACITY = 2048 * 2,
     .WINDOW_SIZE = zi.vec2i(240, 160).muli(4),
     .SOUND_MAX_UNCOMPRESSED_SAMPLES = 64 * 1024,
     .SOUND_MAX_SOURCES = 64,

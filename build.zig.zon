@@ -8,8 +8,8 @@
             .hash = "1220f044556b4cbe92f797dece26d1418bbf67f8d7311e1b0040049690d1044b66e8",
         },
         .zimpact = .{
-            .url = "git+https://github.com/scemino/z_impact.git#66648cc949bb95b821404cc6eae721c5ffd98b20",
-            .hash = "1220d2d4864a64523990606b37fada151854c7d9ed1f8f2f843fbb43325d0a7f825f",
+            .url = "git+https://github.com/scemino/z_impact.git#acdc1a97f9c5fc035640e74a8612d979af9230a8",
+            .hash = "122067e4e7fd08c16dc9ed4131ffd8be2e1fa44ca12e80fea356ca0393d04650b896",
         },
     },
     .paths = .{

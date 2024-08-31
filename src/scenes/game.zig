@@ -53,7 +53,7 @@ pub fn spawnParticle(pos: Vec2, vel: f32, vel_variance: f32, angle: f32, angle_v
 }
 
 fn init() void {
-    zi.Engine.loadLevel(game.EntityKind, level_path);
+    zi.Engine.loadLevel(level_path);
     zi.engine.gravity = 240;
 
     for (zi.engine.background_maps) |map| {
