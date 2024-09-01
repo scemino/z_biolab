@@ -9,11 +9,10 @@ const font = zi.font;
 const scale = zi.utils.scale;
 const vec2 = zi.vec2;
 const Vec2 = zi.Vec2;
-const camera_t = zi.camera_t;
 
 var level_path: []const u8 = undefined;
 var initial_spawn_pos: Vec2 = vec2(0, 0);
-var camera: camera_t = .{};
+var camera: zi.Camera = .{};
 var last_checkpoint: zi.EntityRef = undefined;
 
 pub fn setLevelPath(path: []const u8) void {
