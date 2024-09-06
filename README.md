@@ -8,10 +8,18 @@ Z Biolab disaster is a port of the orginal game [high_biolab](https://github.com
 
 All the assets are converted during the build you have nothing more to do than:
 
-### Linux/Windows/macOS
+### Linux - Windows - macOS
 
-1. Clone this repository
-2. `zig build run`
+SDL2 platform
+
+```shell
+zig build run
+```
+
+sokol platform
+```shell
+zig build -Dplatform=sokol run
+```
 
 ### Web
 
