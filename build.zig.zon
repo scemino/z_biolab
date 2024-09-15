@@ -4,8 +4,8 @@
     .minimum_zig_version = "0.13.0",
     .dependencies = .{
         .zimpact = .{
-            .url = "git+https://github.com/scemino/z_impact.git#a28a3c71c8615dc9f6b2325aff33d3a44647bd26",
-            .hash = "12209e387074d6c715340f454d12ffaa77737ef035d67319162e42104f85879f3e9d",
+            .url = "git+https://github.com/scemino/z_impact.git#37915558be6e94e1c90605d9a5580d4cdd60ee9b",
+            .hash = "1220015fc4477972169e344308282a9bcd4e079cf0d308466de68831eea06b46a5ac",
         },
         .sokol = .{
             .url = "git+https://github.com/floooh/sokol-zig.git#f48d2bd051a282e01dbf463d0f9a59daefd09201",

@@ -7,7 +7,14 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const platform = b.option([]const u8, "platform", "Plaftorm to use: sdl or sokol") orelse "sdl";
-    const is_sdl_platform = !std.mem.eql(u8, platform, "sokol");
+    var platform_renderer: zi.PlatformAndRenderer = .sdl;
+    if (target.result.isWasm()) {
+        platform_renderer = .sdl;
+    } else if (std.mem.eql(u8, platform, "sokol")) {
+        platform_renderer = .sokol;
+    } else if (std.mem.eql(u8, platform, "sdl_soft")) {
+        platform_renderer = .sdl_soft;
+    }
 
     // convert the assets and install them
     const asset_dir = "assets";
@@ -18,7 +25,7 @@ pub fn build(b: *std.Build) !void {
     const mod_zi = zi.getZimpactModule(b, .{
         .optimize = optimize,
         .target = target,
-        .sdl_platform = !target.result.isWasm() and is_sdl_platform,
+        .platform_renderer = platform_renderer,
     });
 
     if (!target.result.isWasm()) {
@@ -30,7 +37,7 @@ pub fn build(b: *std.Build) !void {
             .target = target,
             .optimize = optimize,
         });
-        if (is_sdl_platform) {
+        if (platform_renderer == .sdl or platform_renderer == .sdl_soft) {
             const sdl_sdk = sdl.init(b, "");
             sdl_sdk.link(exe, .dynamic);
         }
