@@ -8,7 +8,7 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const platform = b.option([]const u8, "platform", "Plaftorm to use: sdl or sokol") orelse "sdl";
     var platform_renderer: zi.PlatformAndRenderer = .sdl;
-    if (target.result.isWasm()) {
+    if (target.result.cpu.arch.isWasm()) {
         platform_renderer = .sdl;
     } else if (std.mem.eql(u8, platform, "sokol")) {
         platform_renderer = .sokol;
@@ -28,7 +28,7 @@ pub fn build(b: *std.Build) !void {
         .platform_renderer = platform_renderer,
     });
 
-    if (!target.result.isWasm()) {
+    if (!target.result.cpu.arch.isWasm()) {
         const run_step = b.step(b.fmt("run", .{}), "Run zbiolab");
         // for native platforms, build into a regular executable
         const exe = b.addExecutable(.{
@@ -38,8 +38,8 @@ pub fn build(b: *std.Build) !void {
             .optimize = optimize,
         });
         if (platform_renderer == .sdl or platform_renderer == .sdl_soft) {
-            const sdl_sdk = sdl.init(b, "");
-            sdl_sdk.link(exe, .dynamic);
+            const sdl_sdk = sdl.init(b, .{});
+            sdl_sdk.link(exe, .dynamic, sdl.Library.SDL2);
         }
         exe.root_module.addImport("zimpact", mod_zi);
 
