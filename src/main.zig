@@ -16,7 +16,7 @@ const title = @import("scenes/title.zig");
 /// The values here (particularly resource limits) have been dialed in to this
 /// particular game. Increase them as needed. Allocating a few GB and thousands
 /// of entities is totally fine.
-pub const zi_options = .{
+pub const zi_options: zi.options.Options = .{
     .ALLOC_SIZE = 18 * 1024 * 1024,
     .ALLOC_TEMP_OBJECTS_MAX = 8,
     .ENGINE_MAX_TICK = 0.1,

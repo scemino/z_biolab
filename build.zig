@@ -6,60 +6,63 @@ const zi = @import("zimpact");
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    const platform = b.option([]const u8, "platform", "Plaftorm to use: sdl or sokol") orelse "sdl";
-    var platform_renderer: zi.PlatformAndRenderer = .sdl;
-    if (target.result.cpu.arch.isWasm()) {
-        platform_renderer = .sdl;
-    } else if (std.mem.eql(u8, platform, "sokol")) {
-        platform_renderer = .sokol;
-    } else if (std.mem.eql(u8, platform, "sdl_soft")) {
-        platform_renderer = .sdl_soft;
-    }
-
-    // convert the assets and install them
-    const asset_dir = "assets";
-    const assets_step = try zi.buildAssets(b, asset_dir);
+    const opt_platform = b.option(zi.PlatformAndRenderer, "platform", "Platform to use: sdl, sdl_soft or sokol");
+    const platform_renderer = if (target.result.cpu.arch.isWasm()) .sokol else opt_platform orelse .sdl;
 
     // build Z Biolab sample
     const sample: []const u8 = "zbiolab";
-    const mod_zi = zi.getZimpactModule(b, .{
+    const dep_zi = b.dependency("zimpact", .{
         .optimize = optimize,
         .target = target,
-        .platform_renderer = platform_renderer,
+        .platform = platform_renderer,
     });
 
-    if (!target.result.cpu.arch.isWasm()) {
+    const assets_dir: []const u8 = "assets";
+    const assets_step = b.step("game_assets", "Build game assets");
+    try zi.buildAssets(b, .{
+        .assets_step = assets_step,
+        .asset_dir = assets_dir,
+        .qoiconv_exe = dep_zi.artifact("qoiconv"),
+        .qoaconv_exe = dep_zi.artifact("qoaconv"),
+    });
+
+    const mod_main = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "zimpact", .module = dep_zi.module("zimpact") },
+        },
+    });
+
+    if (target.result.cpu.arch.isWasm()) {
+        try zi.buildWasm(b, .{
+            .mod_main = mod_main,
+            .dep_sokol = dep_zi.builder.dependency("sokol",.{}),
+            .assets_step = assets_step,
+            .shell_file_path = dep_zi.builder.path("web/shell.html"),
+        });
+    } else {
         const run_step = b.step(b.fmt("run", .{}), "Run zbiolab");
-        // for native platforms, build into a regular executable
         const exe = b.addExecutable(.{
             .name = sample,
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
+            .root_module =  mod_main,
         });
         if (platform_renderer == .sdl or platform_renderer == .sdl_soft) {
             const sdl_sdk = sdl.init(b, .{});
             sdl_sdk.link(exe, .dynamic, sdl.Library.SDL2);
         }
-        exe.root_module.addImport("zimpact", mod_zi);
+        const install_exe = b.addInstallArtifact(exe, .{});
+        install_exe.step.dependOn(assets_step);
+        b.getInstallStep().dependOn(&install_exe.step);
 
         const run_cmd = b.addRunArtifact(exe);
-        run_cmd.step.dependOn(&b.addInstallArtifact(exe, .{}).step);
+        run_cmd.step.dependOn(&install_exe.step);
 
         if (b.args) |args| {
             run_cmd.addArgs(args);
         }
 
-        run_step.dependOn(assets_step);
         run_step.dependOn(&run_cmd.step);
-    } else {
-        try zi.buildWeb(b, .{
-            .output_name = "zdrop",
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-            .assets_step = assets_step,
-            .mod_zi = mod_zi,
-        });
     }
 }
