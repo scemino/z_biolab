@@ -7,7 +7,7 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const opt_platform = b.option(zi.PlatformAndRenderer, "platform", "Platform to use: sdl, sdl_soft or sokol");
-    const platform_renderer = if (target.result.cpu.arch.isWasm()) .sokol else opt_platform orelse .sdl;
+    const platform_renderer = if (target.result.cpu.arch.isWasm()) .sokol else opt_platform orelse .sdl_soft;
 
     // build Z Biolab sample
     const sample: []const u8 = "zbiolab";
@@ -38,7 +38,7 @@ pub fn build(b: *std.Build) !void {
     if (target.result.cpu.arch.isWasm()) {
         try zi.buildWasm(b, .{
             .mod_main = mod_main,
-            .dep_sokol = dep_zi.builder.dependency("sokol",.{}),
+            .dep_sokol = dep_zi.builder.dependency("sokol", .{}),
             .assets_step = assets_step,
             .shell_file_path = dep_zi.builder.path("web/shell.html"),
         });
@@ -46,7 +46,7 @@ pub fn build(b: *std.Build) !void {
         const run_step = b.step(b.fmt("run", .{}), "Run zbiolab");
         const exe = b.addExecutable(.{
             .name = sample,
-            .root_module =  mod_main,
+            .root_module = mod_main,
         });
         if (platform_renderer == .sdl or platform_renderer == .sdl_soft) {
             const sdl_sdk = sdl.init(b, .{});
